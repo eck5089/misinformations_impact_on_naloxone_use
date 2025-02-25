@@ -1,7 +1,6 @@
-# Replication Package for Fentanyl on my Mind
+# Replication Package for The Role of Fear in Harm Reduction: Misinformation’s Impact on Naloxone Use
 
-This replication package contains all files necessary to replicate the analyses, tables, and figures presented in the paper, "Fentanyl on My Mind: Perceived Opioid Exposure Risk and its
-Influence on Naloxone Administration Rates". The package is organized into two subdirectories: `original_data` and `scripts`.
+This replication package contains all files necessary to replicate the analyses, tables, and figures presented in the paper, "The Role of Fear in Harm Reduction: Misinformation’s Impact on Naloxone Use". The package is organized into two subdirectories: `original_data` and `scripts`.
 
 ## Directory Structure
 
