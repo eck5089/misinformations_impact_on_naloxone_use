@@ -4,6 +4,7 @@ library(dplyr)
 library(ggplot2)
 library(readr)
 library(fixest)
+library(tidyverse)
 ##Load cleaned data
 final_ny_data <- read_csv("original_data/final_ny_data.csv")
 
@@ -22,10 +23,10 @@ final_ny_data_wide<-final_ny_data[,c("county","period","agent_type","naloxone_co
                                      "avg_earnings")]
 final_ny_data_wide<-pivot_wider(final_ny_data_wide,names_from = agent_type,values_from=naloxone_count)
 final_ny_data_wide[c("LEO","EMS","COOP","death_counts_all_opioids",
-                                             "death_counts_heroin","death_counts_pain_relievers",
-                                             "equifax",
-                                             "pp_medicaid_enroll","unemployment","pp_constr_employ",
-                                             "avg_earnings")]
+                     "death_counts_heroin","death_counts_pain_relievers",
+                     "equifax",
+                     "pp_medicaid_enroll","unemployment","pp_constr_employ",
+                     "avg_earnings")]
 ##Select and reorder key variables
 final_ny_data_wide<-final_ny_data_wide[,c("LEO","EMS","COOP","death_counts_all_opioids",
                                           "death_counts_heroin","death_counts_pain_relievers",
@@ -54,21 +55,21 @@ stargazer(as.data.frame(final_ny_data_wide),
 ########################### Table 2 #########################################
 #Estimate perferred model with LEOs as treated against COOPs
 mod_did1=feglm(naloxone_count ~ post_treat*treat|
-                     year+quarter+agent_type_f,           ## FEs
-                   cluster = ~county.f,  ## Clustered SEs
-                   data = final_ny_data[final_ny_data$agent_type %in% c("LEO","COOP"),],
-                   family = quasipoisson)
+                 year+quarter+agent_type_f,           ## FEs
+               cluster = ~county.f,  ## Clustered SEs
+               data = final_ny_data[final_ny_data$agent_type %in% c("LEO","COOP"),],
+               family = quasipoisson)
 mod_did2=feglm(naloxone_count ~ post_treat*treat + post_treat + equifax + pp_medicaid_enroll + unemployment + pp_constr_employ + avg_earnings |
-                county.f[period]+county.f[(period)^2]+county.f^year+year+quarter+
-                agent_type_f,           ## FEs
-              cluster = ~~county,  ## Clustered SEs
-              data = final_ny_data[final_ny_data$agent_type %in% c("LEO","COOP"),],
-              family = quasipoisson)
+                 county.f[period]+county.f[(period)^2]+county.f^year+year+quarter+
+                 agent_type_f,           ## FEs
+               cluster = ~~county,  ## Clustered SEs
+               data = final_ny_data[final_ny_data$agent_type %in% c("LEO","COOP"),],
+               family = quasipoisson)
 mod_did3=feglm(naloxone_count ~ post_treat*treat + equifax + pp_medicaid_enroll + unemployment + pp_constr_employ + avg_earnings |
-                     county.f^period+county.f+agent_type_f,           ## FEs
-                   cluster = ~county.f,  ## Clustered SEs
-                   data = final_ny_data[final_ny_data$agent_type %in% c("LEO","COOP"),],
-                   family = quasipoisson)
+                 county.f^period+county.f+agent_type_f,           ## FEs
+               cluster = ~county.f,  ## Clustered SEs
+               data = final_ny_data[final_ny_data$agent_type %in% c("LEO","COOP"),],
+               family = quasipoisson)
 mod_did4=feglm(naloxone_count ~ post_treat*treat + equifax + pp_medicaid_enroll + unemployment + pp_constr_employ + avg_earnings |
                  year+county.f^period+agent_type_f^county.f,           ## FEs
                cluster = ~county.f,  ## Clustered SEs
@@ -80,10 +81,10 @@ etable(list(mod_did1,mod_did2, mod_did3,mod_did4))
 ########################### Table 3 #########################################
 #Estimate alternative models where both LEOs and EMS are treated against COOPS
 mod_did_alt1=feglm(naloxone_count ~ post_treat*treat_alt|
-                      year+quarter+agent_type_f,           ## FEs
-                    cluster = ~county.f,  ## Clustered SEs
-                    data = final_ny_data,
-                    family = quasipoisson)
+                     year+quarter+agent_type_f,           ## FEs
+                   cluster = ~county.f,  ## Clustered SEs
+                   data = final_ny_data,
+                   family = quasipoisson)
 mod_did_alt2=feglm(naloxone_count ~ post_treat*treat_alt + post_treat + equifax + pp_medicaid_enroll + unemployment + pp_constr_employ + avg_earnings |
                      county.f[period]+county.f[(period)^2]+county.f^year+year+quarter+
                      agent_type_f,           ## FEs
@@ -91,15 +92,15 @@ mod_did_alt2=feglm(naloxone_count ~ post_treat*treat_alt + post_treat + equifax 
                    data = final_ny_data,
                    family = quasipoisson)
 mod_did_alt3=feglm(naloxone_count ~ post_treat*treat_alt + equifax + pp_medicaid_enroll + unemployment + pp_constr_employ + avg_earnings |
-                      county.f^period+county.f+agent_type_f,           ## FEs
+                     county.f^period+county.f+agent_type_f,           ## FEs
+                   cluster = ~county.f,  ## Clustered SEs
+                   data = final_ny_data,
+                   family = quasipoisson)
+mod_did_alt4<-feglm(naloxone_count ~ post_treat*treat_alt + equifax + pp_medicaid_enroll + unemployment + pp_constr_employ + avg_earnings |
+                      year+county.f^period+agent_type_f^county.f,           ## FEs
                     cluster = ~county.f,  ## Clustered SEs
                     data = final_ny_data,
                     family = quasipoisson)
-mod_did_alt4<-feglm(naloxone_count ~ post_treat*treat_alt + equifax + pp_medicaid_enroll + unemployment + pp_constr_employ + avg_earnings |
-                       year+county.f^period+agent_type_f^county.f,           ## FEs
-                     cluster = ~county.f,  ## Clustered SEs
-                     data = final_ny_data,
-                     family = quasipoisson)
 ##Generate table
 etable(list(mod_did_alt1,mod_did_alt2,mod_did_alt3,
             mod_did_alt4))
@@ -191,11 +192,11 @@ etable(list(feols(naloxone_count ~ post_treat*agent_type_f|
 
 ########################### Table 4 #########################################
 ## PANEL (A): Media dosage model
-etable(feglm(naloxone_count ~ post_treat:`2017_pct_bb_covrg`:factor(agent_type,levels = c("LEO","EMS","COOP"))+
+etable(feglm(naloxone_count ~ post_treat:X2017_pct_bb_covrg:factor(agent_type,levels = c("LEO","EMS","COOP"))+
                equifax + pp_medicaid_enroll + unemployment + pp_constr_employ + avg_earnings |
                county.f[period]+county.f[(period)^2]+county.f^year+year+quarter+
                agent_type_f,          ## FEs
-             cluster = ~~county.f,  ## Clustered SEs
+             cluster = ~county.f,  ## Clustered SEs
              data = final_ny_data,
              family = quasipoisson),
        drop = c("equifax","pp_medicaid_enroll","unemployment","pp_constr_employ",
@@ -225,3 +226,72 @@ esttex(feglm(naloxone_count ~ pharms_per100k:factor(agent_type,levels = c("LEO",
        drop = c("equifax","pp_medicaid_enroll","unemployment","pp_constr_employ",
                 "avg_earnings"),
        drop.section	= c("fixef","slopes"))
+
+########################### Table A1 #########################################
+#Generate centered period measure to reduce collinearity between post_treat and the trend
+final_ny_data$period_c <- with(final_ny_data, period - mean(period, na.rm = TRUE))
+
+# LEO-only ITS
+its_leo_lin <- feglm(
+  naloxone_count ~ post_treat + period_c + post_treat:period_c +
+    equifax + pp_medicaid_enroll + unemployment + pp_constr_employ + avg_earnings |
+    county.f + quarter,
+  cluster = ~ county.f,
+  family  = quasipoisson,
+  data    = final_ny_data[final_ny_data$agent_type %in% "LEO", ]
+)
+
+# EMS-only
+its_ems_lin <- feglm(
+  naloxone_count ~ post_treat + period_c + post_treat:period_c +
+    equifax + pp_medicaid_enroll + unemployment + pp_constr_employ + avg_earnings |
+    county.f + quarter,
+  cluster = ~ county.f,
+  family  = quasipoisson,
+  data    = final_ny_data[final_ny_data$agent_type %in% "EMS", ]
+)
+
+# COOP-only
+its_coop_lin <- feglm(
+  naloxone_count ~ post_treat + period_c + post_treat:period_c +
+    equifax + pp_medicaid_enroll + unemployment + pp_constr_employ + avg_earnings |
+    county.f + quarter,
+  cluster = ~ county.f,
+  family  = quasipoisson,
+  data    = final_ny_data[final_ny_data$agent_type %in% "COOP", ]
+)
+
+etable(list("LEO ITS"     = its_leo_lin,
+            "EMS ITS"     = its_ems_lin,
+            "COOP ITS"    = its_coop_lin),
+       drop = c("equifax","pp_medicaid_enroll","unemployment",
+                "pp_constr_employ","avg_earnings"),
+       tex  = TRUE)
+
+########################### Table A2 #########################################
+#Estimate perferred model with LEOs as treated against EMS
+mod_did_ems1=feglm(naloxone_count ~ post_treat*treat|
+                 year+quarter+agent_type_f,           ## FEs
+               cluster = ~county.f,  ## Clustered SEs
+               data = final_ny_data[final_ny_data$agent_type %in% c("LEO","EMS"),],
+               family = quasipoisson)
+mod_did_ems2=feglm(naloxone_count ~ post_treat*treat + post_treat + equifax + pp_medicaid_enroll + unemployment + pp_constr_employ + avg_earnings |
+                 county.f[period]+county.f[(period)^2]+county.f^year+year+quarter+
+                 agent_type_f,           ## FEs
+               cluster = ~~county,  ## Clustered SEs
+               data = final_ny_data[final_ny_data$agent_type %in% c("LEO","EMS"),],
+               family = quasipoisson)
+mod_did_ems3=feglm(naloxone_count ~ post_treat*treat + equifax + pp_medicaid_enroll + unemployment + pp_constr_employ + avg_earnings |
+                 county.f^period+county.f+agent_type_f,           ## FEs
+               cluster = ~county.f,  ## Clustered SEs
+               data = final_ny_data[final_ny_data$agent_type %in% c("LEO","EMS"),],
+               family = quasipoisson)
+mod_did_ems4=feglm(naloxone_count ~ post_treat*treat + equifax + pp_medicaid_enroll + unemployment + pp_constr_employ + avg_earnings |
+                 year+county.f^period+agent_type_f^county.f,           ## FEs
+               cluster = ~county.f,  ## Clustered SEs
+               data = final_ny_data[final_ny_data$agent_type %in% c("LEO","EMS"),],
+               family = quasipoisson)
+##Generate table
+etable(list(mod_did_ems1,mod_did_ems2, mod_did_ems3,mod_did_ems4),
+       drop = c("equifax","pp_medicaid_enroll","unemployment",
+                "pp_constr_employ","avg_earnings"), tex = TRUE)
